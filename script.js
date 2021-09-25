@@ -3,6 +3,15 @@ const svg = document.getElementById('bG');
 let ctm = svg.getScreenCTM()
 let inverse = ctm.inverse()
 const info = document.getElementById('info');
+const lKernVal = document.getElementById('lKernVal');
+const glName = document.getElementById('glName');
+const unicode = document.getElementById('unicode');
+const lSideB = document.getElementById('lSideB');
+const rSideB = document.getElementById('rSideB');
+const rKernVal = document.getElementById('rKernVal');
+const lKernGroup = document.getElementById('lKernGroup');
+const advW = document.getElementById('advW');
+const rKernGroup = document.getElementById('rKernVal');
 const preview = document.getElementById('preview');
 const prevContP = document.querySelectorAll('.previewContent')[0];
 const prevContE = document.querySelectorAll('.previewContent')[1];
@@ -169,7 +178,6 @@ async function init(){
     font = await opentype.load(fontUrl);
     ascender = font.tables.os2.sTypoAscender;
     descender = font.tables.os2.sTypoDescender;;
-    console.log(ascender,descender);
 
     pointerPos = [1500,800];
     pointerXY = 20;
@@ -218,8 +226,15 @@ init()
 //////////////////////////
 /////event listeners /////
 //////////////////////////
-
+svg.addEventListener('click', ()=>{
+    typing = true;
+})
 addEventListener('mousedown',e=>{
+    console.log(e.target)
+    if(e.target !== svg){
+        typing = false;
+        console.log(typing)
+    }
     clickedTarget = svg.createSVGPoint();
     [clickedTarget.x, clickedTarget.y] = [e.clientX, e.clientY]
     clickedTarget = clickedTarget.matrixTransform(inverse)
@@ -228,7 +243,6 @@ addEventListener('mousedown',e=>{
         tempPreviewBoxY = clickedTarget.y;
         console.log(tempPreviewBoxY)
     } 
-
 
 })
 addEventListener('mousemove',e=>{
@@ -289,89 +303,102 @@ addEventListener('keypress', e=>{
 })
 
 addEventListener('keydown', e=>{
-    if (e.key === 'ArrowUp'){
-        console.log(e.key, pointerIdx)
-    }else if (e.key === 'ArrowDown'){
-        console.log(e.key, pointerIdx)
-    }else if (e.key === 'ArrowLeft'){
-        console.log(e.key, pointerIdx)
-        if(pointerIdx){
-            pointerPos[0] -= glyphList[pointerIdx-1].parse.advanceWidth
-            pointerUse.setAttribute('x', pointerPos[0])
+    if (typing){
+
+        if (e.key === 'ArrowUp'){
+            console.log(e.key, pointerIdx)
+        }else if (e.key === 'ArrowDown'){
+            console.log(e.key, pointerIdx)
+        }else if (e.key === 'ArrowLeft'){
+            console.log(e.key, pointerIdx)
+            if(pointerIdx){
+                pointerPos[0] -= glyphList[pointerIdx-1].parse.advanceWidth
+                pointerUse.setAttribute('x', pointerPos[0])
+        
+        
+                var p = svg.createSVGPoint()
+                p.x = pointerPos[0]
+                p.y = pointerPos[0]
+                p = p.matrixTransform(svg.getScreenCTM());
+                if(p.x >=100){
+                    $('#info').style.left = `${p.x - 57}px`
+                }else{
+                    viewBoxX -= glyphList[pointerIdx-1].parse.advanceWidth
+                    svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxW} ${viewBoxH}`);
+                }
     
+                prevContE.textContent = prevContP.textContent.slice(-1).concat(prevContE.textContent)
+                prevContP.textContent = prevContP.textContent.slice(0, -1)
     
-            var p = svg.createSVGPoint()
-            p.x = pointerPos[0]
-            p.y = pointerPos[0]
-            p = p.matrixTransform(svg.getScreenCTM());
-            if(p.x >=100){
-                $('#info').style.left = `${p.x - 57}px`
-            }else{
-                viewBoxX -= glyphList[pointerIdx-1].parse.advanceWidth
-                svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxW} ${viewBoxH}`);
+                pointerIdx--;    
             }
-
-            prevContE.textContent = prevContP.textContent.slice(-1).concat(prevContE.textContent)
+            if(!pointerIdx){
+                $('.prevGl').classList.add('hidden')
+            }else{
+                $('.prevGl').classList.remove('hidden')
+            }
+        }else if (e.key === 'ArrowRight'){
+            console.log(e.key, pointerIdx)
+            if( pointerIdx !== glyphList.length){
+                if (pointerIdx+1 === glyphList.length) info.classList.add('hidden')
+                $('.prevGl').classList.remove('hidden')
+    
+                pointerPos[0] += glyphList[pointerIdx].parse.advanceWidth
+                pointerUse.setAttribute('x', pointerPos[0])
+                pointerIdx++;
+        
+        
+                var p = svg.createSVGPoint()
+                p.x = pointerPos[0]
+                p.y = pointerPos[0]
+                p = p.matrixTransform(svg.getScreenCTM());
+    
+                if(winW - p.x >= 453){
+                    $('#info').style.left = `${p.x - 57}px`
+                }else{
+                    viewBoxX += glyphList[pointerIdx-1].parse.advanceWidth
+                    svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxW} ${viewBoxH}`);
+                }
+                
+                prevContP.textContent = prevContP.textContent.concat(prevContE.textContent.charAt(0))
+                prevContE.textContent = prevContE.textContent.slice(1, prevContE.textContent.length)
+    
+            }
+        }else if (e.key === 'Backspace'){
+            console.log(e.key, pointerIdx)
+            let pop = glyphList.splice(pointerIdx-1, 1)[0]
+            console.log(pop)
+            pointerPos[0] -= pop.parse.advanceWidth
+            pointerUse.setAttribute('x', pointerPos[0])
+            viewBoxX -= pop.parse.advanceWidth;
+            svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxW} ${viewBoxH}`);
+            if( pointerIdx !== $('#textInput').childNodes.length){
+                console.log('d')
+                glyphList.slice(pointerIdx-1).forEach(v=>{
+                    v.x -= pop.parse.advanceWidth;
+                    console.log(v.x)
+                    v.movePos()
+                })
+            }
+            $('#textInput').removeChild($('#textInput').childNodes[pointerIdx-1])
+            $('#boundingBox').removeChild($('#boundingBox').childNodes[pointerIdx-1])
+            pointerIdx --;
+    
+    
             prevContP.textContent = prevContP.textContent.slice(0, -1)
+        }
 
-            pointerIdx--;    
-        }
-        if(!pointerIdx){
-            $('.prevGl').classList.add('hidden')
-        }else{
-            $('.prevGl').classList.remove('hidden')
-        }
         if( pointerIdx !== glyphList.length) {
             info.classList.remove('hidden')
+            glName.value = glyphList[pointerIdx].parse.name
+            unicode.textContent = glyphList[pointerIdx].parse.unicode.toString(16).padStart(4,'0')
+            lKernVal.value = glyphList[pointerIdx].parse.getMetrics()
+            lSideB.value = glyphList[pointerIdx].parse.getMetrics().leftSideBearing
+            rSideB.value = glyphList[pointerIdx].parse.getMetrics().rightSideBearing
+            rKernVal.value = glyphList[pointerIdx].parse.getMetrics()
+            lKernGroup.value = glyphList[pointerIdx].parse.getMetrics()
+            advW.value = glyphList[pointerIdx].parse.advanceWidth;
+            rKernVal.value = glyphList[pointerIdx].parse.getMetrics()
         }
-    }else if (e.key === 'ArrowRight'){
-        console.log(e.key, pointerIdx)
-        if( pointerIdx !== glyphList.length){
-            if (pointerIdx+1 === glyphList.length) info.classList.add('hidden')
-            $('.prevGl').classList.remove('hidden')
-
-            pointerPos[0] += glyphList[pointerIdx].parse.advanceWidth
-            pointerUse.setAttribute('x', pointerPos[0])
-            pointerIdx++;
-    
-    
-            var p = svg.createSVGPoint()
-            p.x = pointerPos[0]
-            p.y = pointerPos[0]
-            p = p.matrixTransform(svg.getScreenCTM());
-
-            if(winW - p.x >= 453){
-                $('#info').style.left = `${p.x - 57}px`
-            }else{
-                viewBoxX += glyphList[pointerIdx-1].parse.advanceWidth
-                svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxW} ${viewBoxH}`);
-            }
-            
-            prevContP.textContent = prevContP.textContent.concat(prevContE.textContent.charAt(0))
-            prevContE.textContent = prevContE.textContent.slice(1, prevContE.textContent.length)
-
-        }
-    }else if (e.key === 'Backspace'){
-        console.log(e.key, pointerIdx)
-        let pop = glyphList.splice(pointerIdx-1, 1)[0]
-        console.log(pop)
-        pointerPos[0] -= pop.parse.advanceWidth
-        pointerUse.setAttribute('x', pointerPos[0])
-        viewBoxX -= pop.parse.advanceWidth;
-        svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxW} ${viewBoxH}`);
-        if( pointerIdx !== $('#textInput').childNodes.length){
-            console.log('d')
-            glyphList.slice(pointerIdx-1).forEach(v=>{
-                v.x -= pop.parse.advanceWidth;
-                console.log(v.x)
-                v.movePos()
-            })
-        }
-        $('#textInput').removeChild($('#textInput').childNodes[pointerIdx-1])
-        $('#boundingBox').removeChild($('#boundingBox').childNodes[pointerIdx-1])
-        pointerIdx --;
-
-
-        prevContP.textContent = prevContP.textContent.slice(0, -1)
     }
 })
