@@ -13,6 +13,7 @@ let pointerIdx = 0;
 let previewResize = false;
 let typing = true;
 let glyphList = [];
+let boundingList = [];
 let tempPreviewBoxY;
 let winW = window.innerWidth;
 let winH = window.innerHeight;
@@ -29,13 +30,15 @@ class Glyph{
     }
     t = document.createElementNS("http://www.w3.org/2000/svg", "text");
 
-    al = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-    ar = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-    bl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-    br = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-    dl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-    dr = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-    
+    boundingbox = {
+        al: document.createElementNS("http://www.w3.org/2000/svg", "polyline"),
+        ar: document.createElementNS("http://www.w3.org/2000/svg", "polyline"),
+        bl: document.createElementNS("http://www.w3.org/2000/svg", "polyline"),
+        br: document.createElementNS("http://www.w3.org/2000/svg", "polyline"),
+        dl: document.createElementNS("http://www.w3.org/2000/svg", "polyline"),
+        dr: document.createElementNS("http://www.w3.org/2000/svg", "polyline")
+    }
+ 
     appendText(){
         this.t.textContent = this.key;
         setAttributes(this.t, {
@@ -44,34 +47,56 @@ class Glyph{
 
         })
         console.log(this.t)
-        textG.append(this.t)
+        textG.childNodes[pointerIdx-1] === undefined ? (console.log(0),textG.insertBefore(this.t, null)) :  (textG.insertBefore(this.t, textG.childNodes[pointerIdx-1]), console.log(1)) 
+    }
+    drawBoundingBox(){
+        setAttributes(this.boundingbox.al,{
+            points: `${this.x + pointerXY * 0.6},${this.y} ${this.x},${this.y} ${this.x},${this.y + pointerXY * 0.6} `
+        });
+        setAttributes(this.boundingbox.ar,{
+            points: `${this.x + this.parse.advanceWidth - pointerXY * 0.6},${this.y} ${this.x + this.parse.advanceWidth},${this.y} ${this.x + this.parse.advanceWidth},${this.y + pointerXY * 0.6}`
+        });
+        setAttributes(this.boundingbox.bl,{
+            points: `${this.x},${this.y + ascender - pointerXY * 0.6}  ${this.x},${this.y + ascender} ${this.x + pointerXY * 0.6},${this.y + ascender} ${this.x},${this.y + ascender} ${this.x},${this.y + ascender + pointerXY * 0.6} `
+        });
+        setAttributes(this.boundingbox.br,{
+            points: `${this.x + this.parse.advanceWidth},${this.y + ascender - pointerXY * 0.6} ${this.x + this.parse.advanceWidth},${this.y + ascender} ${this.x + this.parse.advanceWidth - pointerXY * 0.6},${this.y + ascender} ${this.x + this.parse.advanceWidth},${this.y + ascender} ${this.x + this.parse.advanceWidth},${this.y + ascender + pointerXY * 0.6}`
+        });
+        setAttributes(this.boundingbox.dl,{
+            points: `${this.x},${this.y + ascender -  descender - pointerXY * 0.6}  ${this.x},${this.y + ascender -  descender} ${this.x + pointerXY * 0.6},${this.y + ascender -  descender} ${this.x},${this.y + ascender -  descender} ${this.x},${this.y + ascender -  descender + pointerXY * 0.6} `
+        });
+        setAttributes(this.boundingbox.dr,{
+            points: `${this.x + this.parse.advanceWidth},${this.y + ascender -  descender - pointerXY * 0.6} ${this.x + this.parse.advanceWidth},${this.y + ascender -  descender} ${this.x + this.parse.advanceWidth - pointerXY * 0.6},${this.y + ascender -  descender} ${this.x + this.parse.advanceWidth},${this.y + ascender -  descender} ${this.x + this.parse.advanceWidth},${this.y + ascender -  descender + pointerXY * 0.6}`
+        })
+        let temp = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        temp.append(this.boundingbox.al, this.boundingbox.ar, this.boundingbox.bl, this.boundingbox.br, this.boundingbox.dl, this.boundingbox.dr)
+        boundingG.childNodes[pointerIdx-1] === undefined ? (console.log(0),boundingG.insertBefore(temp, null)) :  (boundingG.insertBefore(temp, boundingG.childNodes[pointerIdx-1]), console.log(1)) 
+
     }
     movePos(){
         setAttributes(this.t, {
             x: this.x,
             y: this.y + ascender
         })
-    }
-    drawBoundingBox(){
-        setAttributes(this.al,{
+        setAttributes(this.boundingbox.al,{
             points: `${this.x + pointerXY * 0.6},${this.y} ${this.x},${this.y} ${this.x},${this.y + pointerXY * 0.6} `
         });
-        setAttributes(this.ar,{
+        setAttributes(this.boundingbox.ar,{
             points: `${this.x + this.parse.advanceWidth - pointerXY * 0.6},${this.y} ${this.x + this.parse.advanceWidth},${this.y} ${this.x + this.parse.advanceWidth},${this.y + pointerXY * 0.6}`
         });
-        setAttributes(this.bl,{
+        setAttributes(this.boundingbox.bl,{
             points: `${this.x},${this.y + ascender - pointerXY * 0.6}  ${this.x},${this.y + ascender} ${this.x + pointerXY * 0.6},${this.y + ascender} ${this.x},${this.y + ascender} ${this.x},${this.y + ascender + pointerXY * 0.6} `
         });
-        setAttributes(this.br,{
+        setAttributes(this.boundingbox.br,{
             points: `${this.x + this.parse.advanceWidth},${this.y + ascender - pointerXY * 0.6} ${this.x + this.parse.advanceWidth},${this.y + ascender} ${this.x + this.parse.advanceWidth - pointerXY * 0.6},${this.y + ascender} ${this.x + this.parse.advanceWidth},${this.y + ascender} ${this.x + this.parse.advanceWidth},${this.y + ascender + pointerXY * 0.6}`
         });
-        setAttributes(this.dl,{
+        setAttributes(this.boundingbox.dl,{
             points: `${this.x},${this.y + ascender -  descender - pointerXY * 0.6}  ${this.x},${this.y + ascender -  descender} ${this.x + pointerXY * 0.6},${this.y + ascender -  descender} ${this.x},${this.y + ascender -  descender} ${this.x},${this.y + ascender -  descender + pointerXY * 0.6} `
         });
-        setAttributes(this.dr,{
+        setAttributes(this.boundingbox.dr,{
             points: `${this.x + this.parse.advanceWidth},${this.y + ascender -  descender - pointerXY * 0.6} ${this.x + this.parse.advanceWidth},${this.y + ascender -  descender} ${this.x + this.parse.advanceWidth - pointerXY * 0.6},${this.y + ascender -  descender} ${this.x + this.parse.advanceWidth},${this.y + ascender -  descender} ${this.x + this.parse.advanceWidth},${this.y + ascender -  descender + pointerXY * 0.6}`
         })
-        boundingG.append(this.al, this.ar, this.bl, this.br, this.dl, this.dr)
+
     }
 }
 class Path{
@@ -227,7 +252,7 @@ addEventListener('keypress', e=>{
     if (typing) {
         pointerIdx++;
         let G = new Glyph(e.key, pointerPos[0], pointerPos[1], pointerHeight)
-        glyphList.splice(pointerIdx - 1, 0, G)
+        glyphList.splice(pointerIdx-1, 0, G)
         console.log(G.parse)
         if(pointerIdx != glyphList.lenth){
             glyphList.slice(pointerIdx).forEach(v=>{
@@ -291,9 +316,20 @@ addEventListener('keydown', e=>{
 
             pointerIdx--;    
         }
+        if(!pointerIdx){
+            $('.prevGl').classList.add('hidden')
+        }else{
+            $('.prevGl').classList.remove('hidden')
+        }
+        if( pointerIdx !== glyphList.length) {
+            info.classList.remove('hidden')
+        }
     }else if (e.key === 'ArrowRight'){
         console.log(e.key, pointerIdx)
         if( pointerIdx !== glyphList.length){
+            if (pointerIdx+1 === glyphList.length) info.classList.add('hidden')
+            $('.prevGl').classList.remove('hidden')
+
             pointerPos[0] += glyphList[pointerIdx].parse.advanceWidth
             pointerUse.setAttribute('x', pointerPos[0])
             pointerIdx++;
@@ -332,14 +368,10 @@ addEventListener('keydown', e=>{
             })
         }
         $('#textInput').removeChild($('#textInput').childNodes[pointerIdx-1])
+        $('#boundingBox').removeChild($('#boundingBox').childNodes[pointerIdx-1])
         pointerIdx --;
 
 
-        prevContP.textContent = glyphList.reduce((acc,curr)=>{
-            console.log(acc,curr)
-            let prev = acc.key ? acc.key : acc;
-            console.log(prev)
-            return prev.concat(curr.key)
-        },'')
+        prevContP.textContent = prevContP.textContent.slice(0, -1)
     }
 })

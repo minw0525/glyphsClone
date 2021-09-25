@@ -59,6 +59,9 @@ svg {
     position: fixed;
     display: flex;
 }
+.hidden {
+    visibility: hidden;
+}
 #info > div {
     display: flex;
     flex-direction: column;
