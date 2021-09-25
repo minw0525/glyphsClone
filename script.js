@@ -28,6 +28,14 @@ class Glyph{
         this.parse = font.stringToGlyphs(this.key)[0]
     }
     t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+
+    al = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    ar = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    bl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    br = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    dl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    dr = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    
     appendText(){
         this.t.textContent = this.key;
         setAttributes(this.t, {
@@ -45,12 +53,25 @@ class Glyph{
         })
     }
     drawBoundingBox(){
-        const tl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-        const tr = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-        const bl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-        const br = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-
-
+        setAttributes(this.al,{
+            points: `${this.x + pointerXY * 0.6},${this.y} ${this.x},${this.y} ${this.x},${this.y + pointerXY * 0.6} `
+        });
+        setAttributes(this.ar,{
+            points: `${this.x + this.parse.advanceWidth - pointerXY * 0.6},${this.y} ${this.x + this.parse.advanceWidth},${this.y} ${this.x + this.parse.advanceWidth},${this.y + pointerXY * 0.6}`
+        });
+        setAttributes(this.bl,{
+            points: `${this.x},${this.y + ascender - pointerXY * 0.6}  ${this.x},${this.y + ascender} ${this.x + pointerXY * 0.6},${this.y + ascender} ${this.x},${this.y + ascender} ${this.x},${this.y + ascender + pointerXY * 0.6} `
+        });
+        setAttributes(this.br,{
+            points: `${this.x + this.parse.advanceWidth},${this.y + ascender - pointerXY * 0.6} ${this.x + this.parse.advanceWidth},${this.y + ascender} ${this.x + this.parse.advanceWidth - pointerXY * 0.6},${this.y + ascender} ${this.x + this.parse.advanceWidth},${this.y + ascender} ${this.x + this.parse.advanceWidth},${this.y + ascender + pointerXY * 0.6}`
+        });
+        setAttributes(this.dl,{
+            points: `${this.x},${this.y + ascender -  descender - pointerXY * 0.6}  ${this.x},${this.y + ascender -  descender} ${this.x + pointerXY * 0.6},${this.y + ascender -  descender} ${this.x},${this.y + ascender -  descender} ${this.x},${this.y + ascender -  descender + pointerXY * 0.6} `
+        });
+        setAttributes(this.dr,{
+            points: `${this.x + this.parse.advanceWidth},${this.y + ascender -  descender - pointerXY * 0.6} ${this.x + this.parse.advanceWidth},${this.y + ascender -  descender} ${this.x + this.parse.advanceWidth - pointerXY * 0.6},${this.y + ascender -  descender} ${this.x + this.parse.advanceWidth},${this.y + ascender -  descender} ${this.x + this.parse.advanceWidth},${this.y + ascender -  descender + pointerXY * 0.6}`
+        })
+        boundingG.append(this.al, this.ar, this.bl, this.br, this.dl, this.dr)
     }
 }
 class Path{
@@ -104,15 +125,16 @@ svg.append(defs, pointerUse)
 
 
 
-///////////////////////////
-//////// textGroup ////////
-///////////////////////////
+//////////////////////////
+///////// groups /////////
+//////////////////////////
 
 const textG = document.createElementNS("http://www.w3.org/2000/svg", "g"); 
 svg.append(textG)
 
 
-
+const boundingG = document.createElementNS("http://www.w3.org/2000/svg", "g"); 
+svg.append(boundingG)
 
 ////////////////////////
 ///////// init /////////
@@ -130,19 +152,19 @@ async function init(){
     fontSize = 1000;
 
     setAttributes(vLine, {
-        x1: pointerXY,
+        x1: 0,
         y1: 0,
-        x2: pointerXY,
+        x2: 0,
         y2: pointerHeight,
         stroke: 'black',
         'stroke-width': 0.7
     })
     setAttributes(trU, {
-        points: `0,0 ${pointerXY},${pointerXY} ${pointerXY*2},0`,
+        points: `-${pointerXY},0 0,${pointerXY} ${pointerXY},0`,
         fill: `rgb(185, 214, 251)`
     })
     setAttributes(trB, {
-        points: `0,${pointerHeight} ${pointerXY},${pointerHeight - pointerXY} ${pointerXY*2},${pointerHeight}`,
+        points: `-${pointerXY},${pointerHeight} 0,${pointerHeight - pointerXY} ${pointerXY},${pointerHeight}`,
         fill: `rgb(185, 214, 251)`
 
     })
@@ -156,6 +178,12 @@ async function init(){
         id: 'textInput',
         'font-size' : fontSize,
         'font-family': 'Hesiod'
+    })
+    setAttributes(boundingG, {
+        fill: 'none',
+        id: 'boundingBox',
+        stroke: 'black',
+        'stroke-width': 0.8
     })
 }
 init()
@@ -208,6 +236,7 @@ addEventListener('keypress', e=>{
             })
         }
         G.appendText()
+        G.drawBoundingBox()
         pointerPos[0] += G.parse.advanceWidth;
         pointerUse.setAttribute('x', pointerPos[0])
         viewBoxX += G.parse.advanceWidth;
