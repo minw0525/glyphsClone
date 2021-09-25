@@ -1,0 +1,85 @@
+* {
+    margin: 0;
+    padding: 0;
+    font: 10px;
+}
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overscroll-behavior: none;
+}
+svg {
+    width: 100%;
+    height: 100%;
+    cursor: text;
+}
+#preview {
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    height: 25%;
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+#preview::before {
+    content: '';
+    height: 5px;
+    display: block;
+    position: relative;
+    top: -3px;
+    cursor: row-resize;
+}
+.previewContent {
+    vertical-align: bottom;
+    position: absolute;
+    font-family: Hesiod;
+    top: -10%;
+}
+.previewContent:first-child {
+    text-align: right;
+    right: 50%;
+}
+.previewContent:nth-child(2) {
+    text-align: left;
+    left: 50%;
+}
+#previewInfo {
+    height: 20px;
+    position: relative;
+    bottom: 0;
+    padding: 5px;
+}
+#info {
+    width: 410px;
+    height: 60px;
+    bottom: calc(25% + 10px);
+    position: fixed;
+    display: flex;
+}
+#info > div {
+    display: flex;
+    flex-direction: column;
+}
+#info > div:first-child {
+    width: 57px;
+}
+#info > div:last-child {
+    width: 353px;
+}
+#info > div > div:first-child {
+    flex: 1 1 33%;
+}
+#info > div > div:last-child {
+    flex: 1 1 67%;
+}
+.infoBox {
+    background: rgba(210, 210, 210, 0.8);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
